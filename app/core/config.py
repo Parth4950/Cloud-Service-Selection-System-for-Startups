@@ -133,8 +133,16 @@ def _env_bool(value: str | None) -> bool:
         return False
     return value.strip().lower() in ("true", "1", "yes")
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or None
-ENABLE_AI_EXPLANATION = _env_bool(os.environ.get("ENABLE_AI_EXPLANATION", "false"))
+GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip() or None
+ENABLE_AI_EXPLANATION = _env_bool((os.environ.get("ENABLE_AI_EXPLANATION") or "false").strip())
+
+# Log AI explanation config at import (no key value). Helps confirm .env was loaded.
+import logging as _logging
+_logging.getLogger(__name__).info(
+    "config | ENABLE_AI_EXPLANATION=%s | GEMINI_API_KEY=%s",
+    ENABLE_AI_EXPLANATION,
+    "set" if GEMINI_API_KEY else "not set",
+)
 
 # ---------------------------------------------------------------------------
 # Service/model rules: conditions keyed by industry and team_expertise.

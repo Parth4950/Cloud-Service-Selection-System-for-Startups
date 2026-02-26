@@ -145,10 +145,15 @@ def enhance_explanation_with_ai(original_explanation: List[str]) -> str:
     """
     formatted = _format_deterministic_explanation(original_explanation)
 
-    if not ENABLE_AI_EXPLANATION or not GEMINI_API_KEY:
+    if not ENABLE_AI_EXPLANATION:
+        logger.info("explanation_engine | AI explanation disabled (ENABLE_AI_EXPLANATION=false), using deterministic")
+        return formatted
+    if not GEMINI_API_KEY or not (GEMINI_API_KEY or "").strip():
+        logger.info("explanation_engine | AI explanation skipped (no GEMINI_API_KEY), using deterministic")
         return formatted
 
     try:
+        logger.info("explanation_engine | Calling Gemini for explanation enhancement")
         prompt = (
             "Rewrite this cloud recommendation explanation professionally and concisely. "
             "Keep the same meaning and do not add new facts.\n\n"
@@ -180,8 +185,21 @@ def enhance_explanation_with_ai(original_explanation: List[str]) -> str:
             if parts and isinstance(parts[0], dict):
                 text = parts[0].get("text")
                 if text and isinstance(text, str):
+                    logger.info("explanation_engine | Gemini enhancement succeeded")
                     return text.strip()
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, KeyError, TypeError) as e:
+        logger.warning("explanation_engine | Gemini returned unexpected response structure, using deterministic")
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode("utf-8", errors="replace")[:500]
+        except Exception:
+            pass
+        logger.warning(
+            "explanation_engine | Gemini HTTP error %s, using deterministic | body=%s",
+            e.code,
+            body,
+        )
+    except (urllib.error.URLError, json.JSONDecodeError, KeyError, TypeError) as e:
         logger.warning("explanation_engine | Gemini enhancement failed, using deterministic | %s", e)
     except Exception as e:
         logger.warning("explanation_engine | Gemini enhancement error, using deterministic | %s", e)
