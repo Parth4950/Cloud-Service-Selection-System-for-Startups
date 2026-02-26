@@ -474,19 +474,13 @@
     var explanationEnhanced = (data.explanation_enhanced != null && typeof data.explanation_enhanced === "string")
       ? data.explanation_enhanced.trim()
       : "";
+    var explanationParagraph = explanationEnhanced || (explanation.length ? explanation.join("\n\n") : "");
     var scoreBarsHtml = buildScoreComparisonBars(scores, provider);
 
     var explanationHtml = "";
-    if (explanationEnhanced) {
+    if (explanationParagraph) {
       explanationHtml = "<p class=\"result-section-label\">Explanation</p><p class=\"result-explanation result-explanation--enhanced\">" +
-        escapeHtml(explanationEnhanced).replace(/\n/g, "<br>") + "</p>";
-    } else {
-      var explanationItems = explanation
-        .map(function (line) { return "<li class=\"result-explanation__item\">" + escapeHtml(line) + "</li>"; })
-        .join("");
-      if (explanationItems) {
-        explanationHtml = "<p class=\"result-section-label\">Explanation</p><ul class=\"result-explanation\">" + explanationItems + "</ul>";
-      }
+        escapeHtml(explanationParagraph).replace(/\n/g, "<br>") + "</p>";
     }
 
     var whyNotHtml = buildWhyNotOthers(provider, scores);
