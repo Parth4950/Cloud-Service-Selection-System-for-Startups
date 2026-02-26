@@ -348,6 +348,58 @@ body {
 }
 
 /* ---------- Decision priority control panel ---------- */
+/* ---------- Quick recommendation modes ---------- */
+.preset-modes {
+    margin: 1.5rem 0 1rem;
+}
+
+.preset-modes__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.75rem;
+}
+
+.preset-modes__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.6rem;
+}
+
+.preset-mode-btn {
+    padding: 0.65rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--color-text);
+    background: #f8fafc;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.preset-mode-btn:hover {
+    background: #f1f5f9;
+    border-color: var(--color-primary);
+}
+
+.preset-mode-btn--active {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.preset-mode-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.preset-mode-btn:active {
+    transform: scale(0.98);
+}
+
 .weight-panel {
     margin: 1.5rem 0 1.25rem;
     padding: 1.25rem;
@@ -810,6 +862,10 @@ body {
 @media (max-width: 480px) {
     .recommend-form {
         padding: 1.25rem;
+    }
+
+    .preset-modes__grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .weight-panel {

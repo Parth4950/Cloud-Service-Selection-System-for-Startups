@@ -106,6 +106,15 @@
                             <option value="high">High</option>
                         </select>
                     </div>
+                    <div class="preset-modes">
+                        <h3 class="preset-modes__title">Quick recommendation modes</h3>
+                        <div class="preset-modes__grid">
+                            <button type="button" class="preset-mode-btn" data-preset="startup" aria-pressed="false">Startup Mode</button>
+                            <button type="button" class="preset-mode-btn" data-preset="enterprise" aria-pressed="false">Enterprise Mode</button>
+                            <button type="button" class="preset-mode-btn" data-preset="cost_optimized" aria-pressed="false">Cost-Optimized Mode</button>
+                            <button type="button" class="preset-mode-btn" data-preset="high_security" aria-pressed="false">High-Security Mode</button>
+                        </div>
+                    </div>
                     <div class="weight-panel">
                         <h3 class="weight-panel__title">Decision priority control panel</h3>
                         <p class="weight-panel__helper">Adjust how much each factor influences the final recommendation.</p>
@@ -168,6 +177,15 @@
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="region" class="form-group__label">Deployment Region</label>
+                        <select id="region" name="region" class="form-group__select">
+                            <option value="">Select...</option>
+                            <option value="india">India</option>
+                            <option value="us">US</option>
+                            <option value="europe">Europe</option>
                         </select>
                     </div>
                     <div class="form-group">

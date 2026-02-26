@@ -36,6 +36,7 @@ REQUIRED_FIELDS = [
 
 QUALITATIVE_VALUES = frozenset({"low", "medium", "high"})
 INDUSTRY_VALUES = frozenset({"general", "fintech", "healthcare", "ai"})
+REGION_VALUES = frozenset({"india", "us", "europe"})
 
 QUALITATIVE_FIELDS = frozenset({
     "budget", "scalability", "security", "ease_of_use", "free_tier", "team_expertise",
@@ -102,6 +103,18 @@ def _extract_custom_weights(data: Dict[str, Any]) -> Dict[str, float] | None:
     return extracted
 
 
+def _extract_region(data: Dict[str, Any]) -> str | None:
+    """
+    Extract optional deployment region from request JSON.
+    Returns normalized region ("india" | "us" | "europe") if valid, else None.
+    """
+    raw = data.get("region")
+    if not isinstance(raw, str):
+        return None
+    normalized = raw.strip().lower()
+    return normalized if normalized in REGION_VALUES else None
+
+
 @bp.route("/recommend", methods=["GET", "POST"])
 def recommend():
     """
@@ -135,9 +148,10 @@ def recommend():
         return jsonify({"error": value_error}), 400
 
     custom_weights = _extract_custom_weights(data)
+    region = _extract_region(data)
 
     try:
-        provider_scores = calculate_provider_scores(user_input, custom_weights)
+        provider_scores = calculate_provider_scores(user_input, custom_weights, region=region)
     except (TypeError, ValueError) as e:
         logger.warning("recommend | invalid input | %s", str(e))
         return jsonify({"error": str(e)}), 400

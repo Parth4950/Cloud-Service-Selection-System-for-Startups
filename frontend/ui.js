@@ -289,7 +289,7 @@
 
     heading("User input summary", y);
     y += lineH + 2;
-    var labels = { budget: "Budget", scalability: "Scalability", security: "Security", ease_of_use: "Ease of use", free_tier: "Free tier", team_expertise: "Team expertise", industry: "Industry" };
+    var labels = { budget: "Budget", scalability: "Scalability", security: "Security", ease_of_use: "Ease of use", free_tier: "Free tier", team_expertise: "Team expertise", region: "Deployment region", industry: "Industry" };
     for (var key in labels) {
       if (Object.prototype.hasOwnProperty.call(labels, key)) {
         text(labels[key] + ": " + (userInput[key] != null ? userInput[key] : "—"), left + 4, y);
@@ -470,6 +470,60 @@
     if (empty) { empty.setAttribute("hidden", "hidden"); empty.setAttribute("aria-hidden", "true"); }
   }
 
+  /** Preset weight values per mode (raw slider values 0–100). */
+  var PRESET_WEIGHTS = {
+    startup: { budget: 35, free_tier: 30, ease_of_use: 20, scalability: 10, security: 5 },
+    enterprise: { scalability: 30, security: 30, budget: 10, ease_of_use: 15, free_tier: 5 },
+    cost_optimized: { budget: 40, free_tier: 35, scalability: 10, security: 10, ease_of_use: 5 },
+    high_security: { security: 40, scalability: 20, budget: 15, ease_of_use: 10, free_tier: 5 }
+  };
+
+  var WEIGHT_KEYS_PRESET = ["budget", "scalability", "security", "ease_of_use", "free_tier"];
+
+  function setPresetActive(presetId) {
+    var buttons = document.querySelectorAll(".preset-mode-btn");
+    buttons.forEach(function (btn) {
+      var id = btn.getAttribute("data-preset");
+      if (id === presetId) {
+        btn.classList.add("preset-mode-btn--active");
+        btn.setAttribute("aria-pressed", "true");
+      } else {
+        btn.classList.remove("preset-mode-btn--active");
+        btn.setAttribute("aria-pressed", "false");
+      }
+    });
+  }
+
+  function clearPresetActive() {
+    var buttons = document.querySelectorAll(".preset-mode-btn");
+    buttons.forEach(function (btn) {
+      btn.classList.remove("preset-mode-btn--active");
+      btn.setAttribute("aria-pressed", "false");
+    });
+  }
+
+  function applyPreset(presetId) {
+    var values = PRESET_WEIGHTS[presetId];
+    if (!values) return;
+    for (var i = 0; i < WEIGHT_KEYS_PRESET.length; i++) {
+      var key = WEIGHT_KEYS_PRESET[i];
+      var el = document.getElementById("weight_" + key);
+      if (el) el.value = values[key] != null ? values[key] : 20;
+    }
+    setPresetActive(presetId);
+    document.dispatchEvent(new CustomEvent("preset-applied"));
+  }
+
+  function bindPresetButtons() {
+    var buttons = document.querySelectorAll(".preset-mode-btn");
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-preset");
+        if (id) applyPreset(id);
+      });
+    });
+  }
+
   global.CloudSelectionUI = {
     showScreen: showScreen,
     showLoadingOverlay: showLoadingOverlay,
@@ -480,6 +534,9 @@
     showPreviewLoading: showPreviewLoading,
     hidePreviewLoading: hidePreviewLoading,
     showPreviewEmpty: showPreviewEmpty,
-    updatePreview: updatePreview
+    updatePreview: updatePreview,
+    setPresetActive: setPresetActive,
+    clearPresetActive: clearPresetActive,
+    bindPresetButtons: bindPresetButtons
   };
 })(typeof window !== "undefined" ? window : this);

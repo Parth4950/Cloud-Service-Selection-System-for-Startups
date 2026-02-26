@@ -68,6 +68,29 @@ WEIGHT_CONFIG = {
 }
 
 # ---------------------------------------------------------------------------
+# Regional advantage modifiers: small boost per provider per region.
+# Applied after base scoring. Optional; if no region provided, no modifier.
+# ---------------------------------------------------------------------------
+
+REGION_PROVIDER_MODIFIERS = {
+    "india": {
+        "aws": 0.2,
+        "azure": 0.3,
+        "gcp": 0.1,
+    },
+    "us": {
+        "aws": 0.3,
+        "azure": 0.2,
+        "gcp": 0.2,
+    },
+    "europe": {
+        "aws": 0.2,
+        "azure": 0.3,
+        "gcp": 0.2,
+    },
+}
+
+# ---------------------------------------------------------------------------
 # Service/model rules: conditions keyed by industry and team_expertise.
 # Structured data only; rule evaluation is done elsewhere.
 # ---------------------------------------------------------------------------

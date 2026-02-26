@@ -61,6 +61,7 @@
       team_expertise: form.team_expertise.value,
       industry: form.industry.value
     };
+    if (form.region && form.region.value) payload.region = form.region.value;
     payload.weights = getNormalizedWeights();
     return payload;
   }
@@ -155,10 +156,12 @@
       var input = document.getElementById("weight_" + key);
       if (!input) continue;
       input.addEventListener("input", function () {
+        UI.clearPresetActive();
         updateWeightPanel();
         schedulePreview();
       });
       input.addEventListener("change", function () {
+        UI.clearPresetActive();
         updateWeightPanel();
         schedulePreview();
       });
@@ -174,6 +177,10 @@
       if (!field) continue;
       field.addEventListener("change", schedulePreview);
       field.addEventListener("input", schedulePreview);
+    }
+    var regionField = form.region;
+    if (regionField) {
+      regionField.addEventListener("change", schedulePreview);
     }
   }
 
@@ -212,7 +219,13 @@
       form.addEventListener("submit", onFormSubmit);
     }
 
+    document.addEventListener("preset-applied", function () {
+      updateWeightPanel();
+      schedulePreview();
+    });
+
     bindWeightSliders();
+    UI.bindPresetButtons();
     bindPreviewInputs();
   }
 

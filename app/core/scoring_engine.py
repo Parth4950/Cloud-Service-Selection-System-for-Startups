@@ -5,7 +5,7 @@ using static configuration. Pure business logic; no side effects.
 
 from typing import Any, Dict, Mapping, Optional
 
-from app.core.config import PROVIDER_CATALOG, WEIGHT_CONFIG
+from app.core.config import PROVIDER_CATALOG, REGION_PROVIDER_MODIFIERS, WEIGHT_CONFIG
 
 # Qualitative user input -> numeric intensity (1–9 scale).
 # Used to weight how much each dimension matters to the user.
@@ -80,6 +80,7 @@ def _select_weights(custom_weights: Optional[Mapping[str, Any]]) -> Dict[str, fl
 def calculate_provider_scores(
     user_input: Dict[str, Any],
     custom_weights: Optional[Mapping[str, Any]] = None,
+    region: Optional[str] = None,
 ) -> Dict[str, float]:
     """
     Compute a weighted score per provider (AWS, Azure, GCP) from
@@ -89,6 +90,8 @@ def calculate_provider_scores(
     They are converted to numeric intensity, then multiplied with
     each provider's feature score and combined using either the
     static WEIGHT_CONFIG or optional custom_weights.
+    If region is provided, a small regional advantage modifier is
+    added per provider.
 
     Args:
         user_input: Dict of feature names to qualitative level.
@@ -98,6 +101,8 @@ def calculate_provider_scores(
         custom_weights: Optional mapping of feature name to numeric
             weight. If provided and valid, these weights are
             normalized to sum to 1 and used instead of WEIGHT_CONFIG.
+        region: Optional deployment region: "india", "us", or "europe".
+            If provided, REGION_PROVIDER_MODIFIERS are applied.
 
     Returns:
         Dict mapping provider id to final numeric score, e.g.:
@@ -120,6 +125,12 @@ def calculate_provider_scores(
             provider_score = feature_scores[feature]
             score += weight * user_intensity * provider_score
         result[provider_id] = round(score, 4)
+
+    if region and region in REGION_PROVIDER_MODIFIERS:
+        modifiers = REGION_PROVIDER_MODIFIERS[region]
+        for provider_id in result:
+            if provider_id in modifiers:
+                result[provider_id] = round(result[provider_id] + modifiers[provider_id], 4)
 
     return result
 
