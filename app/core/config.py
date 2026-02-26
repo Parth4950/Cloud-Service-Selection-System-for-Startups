@@ -4,6 +4,19 @@ Centralizes app config; no logic, placeholder for future values.
 Static configuration for provider comparison and service model rules.
 """
 
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load .env: first from current working directory, then from project root.
+# Ensures .env is found whether you run from project root or elsewhere.
+load_dotenv()
+_project_root = Path(__file__).resolve().parent.parent.parent
+_env_path = _project_root / ".env"
+if _env_path.exists():
+    load_dotenv(_env_path)
+
 # ---------------------------------------------------------------------------
 # Provider catalog: feature scores (3–10 scale). Each provider is specialized
 # with clear strengths and weaknesses so different inputs yield different winners.
@@ -108,6 +121,20 @@ MOCK_PRICING = {
         "base_storage": 35,
     },
 }
+
+# ---------------------------------------------------------------------------
+# Optional AI explanation layer. Loaded from .env; never log or expose the key.
+# When ENABLE_AI_EXPLANATION is false or GEMINI_API_KEY missing, only deterministic explanation is used.
+# ---------------------------------------------------------------------------
+
+def _env_bool(value: str | None) -> bool:
+    """Convert env string to boolean safely. true/1/yes (case-insensitive) -> True."""
+    if not value:
+        return False
+    return value.strip().lower() in ("true", "1", "yes")
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or None
+ENABLE_AI_EXPLANATION = _env_bool(os.environ.get("ENABLE_AI_EXPLANATION", "false"))
 
 # ---------------------------------------------------------------------------
 # Service/model rules: conditions keyed by industry and team_expertise.

@@ -1,11 +1,23 @@
 """
 Explanation engine: generates human-readable explanations for provider
 and service model recommendations. Deterministic; no scoring or selection.
+Optional AI enhancement when enabled and configured.
 """
 
+import json
+import logging
+import urllib.error
+import urllib.request
 from typing import Dict, Any, List, Tuple
 
-from app.core.config import PROVIDER_CATALOG, WEIGHT_CONFIG
+from app.core.config import (
+    ENABLE_AI_EXPLANATION,
+    GEMINI_API_KEY,
+    PROVIDER_CATALOG,
+    WEIGHT_CONFIG,
+)
+
+logger = logging.getLogger(__name__)
 
 # Qualitative preference -> numeric intensity for ranking influence (not for scoring).
 _INFLUENCE_SCALE = {"low": 3, "medium": 6, "high": 9}
@@ -110,3 +122,68 @@ def generate_explanation(
         result.append("Service model: default recommendation applied.")
 
     return result
+
+
+def _format_deterministic_explanation(original_explanation: List[str]) -> str:
+    """Format the deterministic explanation list as a single string."""
+    if not original_explanation:
+        return "No explanation available."
+    return "\n\n".join(str(s) for s in original_explanation)
+
+
+def enhance_explanation_with_ai(original_explanation: List[str]) -> str:
+    """
+    Optionally enhance explanation using Gemini. When disabled or on failure,
+    returns the formatted deterministic explanation. API key is never logged or exposed.
+
+    Args:
+        original_explanation: List of strings from generate_explanation().
+
+    Returns:
+        Single string: AI-rewritten paragraph if enabled and successful,
+        otherwise formatted deterministic explanation.
+    """
+    formatted = _format_deterministic_explanation(original_explanation)
+
+    if not ENABLE_AI_EXPLANATION or not GEMINI_API_KEY:
+        return formatted
+
+    try:
+        prompt = (
+            "Rewrite this cloud recommendation explanation professionally and concisely. "
+            "Keep the same meaning and do not add new facts.\n\n"
+            + formatted
+        )
+        body = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "maxOutputTokens": 300,
+                "temperature": 0.3,
+            },
+        }
+        api_key = (GEMINI_API_KEY or "").strip() if isinstance(GEMINI_API_KEY, str) else ""
+        if not api_key:
+            return formatted
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + api_key
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(body).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        candidates = data.get("candidates") or []
+        if candidates and isinstance(candidates[0], dict):
+            content = candidates[0].get("content") or {}
+            parts = content.get("parts") or []
+            if parts and isinstance(parts[0], dict):
+                text = parts[0].get("text")
+                if text and isinstance(text, str):
+                    return text.strip()
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, KeyError, TypeError) as e:
+        logger.warning("explanation_engine | Gemini enhancement failed, using deterministic | %s", e)
+    except Exception as e:
+        logger.warning("explanation_engine | Gemini enhancement error, using deterministic | %s", e)
+
+    return formatted if formatted else "No explanation available."

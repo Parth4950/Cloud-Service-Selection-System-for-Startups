@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify
 
 from app.core.scoring_engine import calculate_estimated_cost, calculate_provider_scores
 from app.core.service_model_rules import determine_service_model
-from app.core.explanation_engine import generate_explanation
+from app.core.explanation_engine import enhance_explanation_with_ai, generate_explanation
 
 logger = logging.getLogger(__name__)
 bp = Blueprint("api", __name__, url_prefix="/")
@@ -169,6 +169,11 @@ def recommend():
         selected_provider,
         service_model_result,
     )
+    try:
+        explanation_enhanced: str = enhance_explanation_with_ai(explanation)
+    except Exception as e:
+        logger.warning("recommend | AI explanation failed, using deterministic | %s", e)
+        explanation_enhanced = "\n\n".join(explanation) if explanation else "No explanation available."
 
     estimated_costs: Dict[str, float] = {}
     for pid in ("aws", "azure", "gcp"):
@@ -188,6 +193,8 @@ def recommend():
         "final_scores": provider_scores,
         "estimated_costs": estimated_costs,
         "explanation": explanation,
+        "explanation_raw": explanation,
+        "explanation_enhanced": explanation_enhanced,
     }
 
     return jsonify(response), 200

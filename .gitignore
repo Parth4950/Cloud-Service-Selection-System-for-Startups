@@ -5,6 +5,7 @@ env/
 
 # Python
 __pycache__/
+*.pyc
 *.py[cod]
 *$py.class
 *.so
@@ -14,9 +15,10 @@ __pycache__/
 dist/
 build/
 
-# Environment and secrets
+# Environment and secrets (never commit)
 .env
 .env.*
+.env.local
 *.log
 
 # IDE and editor

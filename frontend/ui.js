@@ -52,6 +52,25 @@
 
   var PROVIDERS = ["aws", "azure", "gcp"];
 
+  /** Suggested architecture node chains per provider and service model. */
+  var ARCHITECTURE_TEMPLATES = {
+    aws: {
+      iaas: ["User", "EC2", "RDS", "S3"],
+      paas: ["User", "Elastic Beanstalk", "RDS", "S3"],
+      saas: ["User", "Managed SaaS Application", "Cloud Storage"]
+    },
+    azure: {
+      iaas: ["User", "VM", "SQL Database", "Blob Storage"],
+      paas: ["User", "App Service", "SQL DB", "Blob Storage"],
+      saas: ["User", "SaaS Platform", "Azure Storage"]
+    },
+    gcp: {
+      iaas: ["User", "Compute Engine", "Cloud SQL", "Cloud Storage"],
+      paas: ["User", "App Engine", "Cloud SQL", "Cloud Storage"],
+      saas: ["User", "Managed SaaS", "Cloud Storage"]
+    }
+  };
+
   /**
    * Compute decision confidence from final_scores.
    * confidence = (top_score - second_highest_score) / top_score, as percentage 0–100.
@@ -221,6 +240,35 @@
         '</div>';
     }
     html += "</div>";
+    return html;
+  }
+
+  /**
+   * Build "Suggested Cloud Architecture" diagram HTML from provider and service model.
+   * Pure HTML + CSS; no external images. Clears any previous diagram when called.
+   * @param {string} provider - aws | azure | gcp
+   * @param {string} serviceModel - IaaS | PaaS | SaaS
+   * @returns {string} HTML string for the section, or "" if no template
+   */
+  function renderArchitecture(provider, serviceModel) {
+    var p = (provider && String(provider).toLowerCase()) || "";
+    var m = (serviceModel && String(serviceModel).toLowerCase()) || "";
+    var templates = ARCHITECTURE_TEMPLATES[p];
+    if (!templates) return "";
+    var chain = templates[m] || templates.iaas;
+    if (!chain || chain.length === 0) return "";
+
+    var providerClass = "architecture-diagram--" + (p || "aws");
+    var html = '<p class="result-section-label">Suggested Cloud Architecture</p>' +
+      '<div class="result-architecture" data-provider="' + escapeHtml(p) + '">' +
+      '<div class="architecture-diagram ' + providerClass + '">';
+    for (var i = 0; i < chain.length; i++) {
+      if (i > 0) {
+        html += '<span class="arch-arrow" aria-hidden="true"></span>';
+      }
+      html += '<div class="arch-node">' + escapeHtml(chain[i]) + '</div>';
+    }
+    html += "</div></div>";
     return html;
   }
 
@@ -423,26 +471,38 @@
     var model = data.recommended_service_model || "—";
     var scores = data.final_scores || {};
     var explanation = Array.isArray(data.explanation) ? data.explanation : [];
+    var explanationEnhanced = (data.explanation_enhanced != null && typeof data.explanation_enhanced === "string")
+      ? data.explanation_enhanced.trim()
+      : "";
     var scoreBarsHtml = buildScoreComparisonBars(scores, provider);
 
-    var explanationItems = explanation
-      .map(function (line) { return "<li class=\"result-explanation__item\">" + escapeHtml(line) + "</li>"; })
-      .join("");
+    var explanationHtml = "";
+    if (explanationEnhanced) {
+      explanationHtml = "<p class=\"result-section-label\">Explanation</p><p class=\"result-explanation result-explanation--enhanced\">" +
+        escapeHtml(explanationEnhanced).replace(/\n/g, "<br>") + "</p>";
+    } else {
+      var explanationItems = explanation
+        .map(function (line) { return "<li class=\"result-explanation__item\">" + escapeHtml(line) + "</li>"; })
+        .join("");
+      if (explanationItems) {
+        explanationHtml = "<p class=\"result-section-label\">Explanation</p><ul class=\"result-explanation\">" + explanationItems + "</ul>";
+      }
+    }
 
     var whyNotHtml = buildWhyNotOthers(provider, scores);
     var confidenceHtml = buildConfidenceSection(scores);
     var costs = data.estimated_costs || {};
     var costCardsHtml = buildEstimatedCostSection(costs, provider);
+    var architectureHtml = renderArchitecture(provider, model);
 
     container.innerHTML =
       "<h2 class=\"result-provider\">" + escapeHtml(String(provider).toUpperCase()) + "</h2>" +
       "<p class=\"result-model-badge\">" + escapeHtml(model) + "</p>" +
       (confidenceHtml || "") +
       (costCardsHtml || "") +
+      (architectureHtml || "") +
       (scoreBarsHtml || "") +
-      (explanationItems
-        ? "<p class=\"result-section-label\">Explanation</p><ul class=\"result-explanation\">" + explanationItems + "</ul>"
-        : "") +
+      (explanationHtml || "") +
       (whyNotHtml || "");
 
     animateConfidence(container);
