@@ -1,0 +1,43 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Git and IDE
+.git/
+.gitignore
+.ebignore
+.cursor/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local and dev
+.env
+.env.*
+*.log
+*.bat
+*.ps1
+
+# Tests (not needed in production image)
+tests/
+pytest.ini
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docs and misc
+*.md
+!frontend/lib/README.txt

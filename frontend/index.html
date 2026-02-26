@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Service Selection System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loading-overlay" class="loading-overlay" aria-hidden="true">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Getting your recommendation...</p>
+    </div>
+
+    <div class="app">
+        <!-- 1. Landing (Hero) -->
+        <section id="landing-screen" class="screen screen--active">
+            <div class="hero">
+                <div class="hero__shape hero__shape--1"></div>
+                <div class="hero__shape hero__shape--2"></div>
+                <div class="hero__content">
+                    <h1 class="hero__title">Choose the right cloud for your startup</h1>
+                    <p class="hero__subtitle">Rule-based, explainable recommendations for AWS, Azure, and GCP.</p>
+                    <button type="button" class="btn btn--primary btn--cta" id="cta-get-started">Get Started</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. About / How it works -->
+        <section id="about-screen" class="screen">
+            <div class="about">
+                <h2 class="about__title">How it works</h2>
+                <div class="feature-grid">
+                    <article class="feature-card">
+                        <div class="feature-card__icon" aria-hidden="true">◇</div>
+                        <h3 class="feature-card__title">Rule-Based Decision</h3>
+                        <p class="feature-card__text">Industry and expertise drive service model selection.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-card__icon" aria-hidden="true">◆</div>
+                        <h3 class="feature-card__title">Weighted Scoring</h3>
+                        <p class="feature-card__text">Budget, security, and scalability shape provider scores.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-card__icon" aria-hidden="true">○</div>
+                        <h3 class="feature-card__title">Explainable Output</h3>
+                        <p class="feature-card__text">Clear reasons for the recommended provider and model.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-card__icon" aria-hidden="true">▣</div>
+                        <h3 class="feature-card__title">Cloud-Ready Architecture</h3>
+                        <p class="feature-card__text">Designed for AWS Elastic Beanstalk and static hosting.</p>
+                    </article>
+                </div>
+                <button type="button" class="btn btn--primary" id="cta-to-form">Continue to questionnaire</button>
+            </div>
+        </section>
+
+        <!-- 3. Form -->
+        <section id="form-screen" class="screen">
+            <div class="form-wrap">
+                <h2 class="form-wrap__title">Your requirements</h2>
+                <form id="recommend-form" class="recommend-form">
+                    <div class="form-group">
+                        <label for="budget" class="form-group__label">Budget</label>
+                        <select id="budget" name="budget" class="form-group__select" required>
+                            <option value="">Select...</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="scalability" class="form-group__label">Scalability</label>
+                        <select id="scalability" name="scalability" class="form-group__select" required>
+                            <option value="">Select...</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="security" class="form-group__label">Security</label>
+                        <select id="security" name="security" class="form-group__select" required>
+                            <option value="">Select...</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ease_of_use" class="form-group__label">Ease of Use</label>
+                        <select id="ease_of_use" name="ease_of_use" class="form-group__select" required>
+                            <option value="">Select...</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="free_tier" class="form-group__label">Free Tier Importance</label>
+                        <select id="free_tier" name="free_tier" class="form-group__select" required>
+                            <option value="">Select...</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="weight-panel">
+                        <h3 class="weight-panel__title">Decision priority control panel</h3>
+                        <p class="weight-panel__helper">Adjust how much each factor influences the final recommendation.</p>
+                        <div class="weight-distribution" aria-label="Weight distribution">
+                            <div class="weight-distribution__bar">
+                                <div class="weight-distribution__segment" id="weight_dist_budget" data-key="budget" role="presentation"></div>
+                                <div class="weight-distribution__segment" id="weight_dist_scalability" data-key="scalability" role="presentation"></div>
+                                <div class="weight-distribution__segment" id="weight_dist_security" data-key="security" role="presentation"></div>
+                                <div class="weight-distribution__segment" id="weight_dist_ease_of_use" data-key="ease_of_use" role="presentation"></div>
+                                <div class="weight-distribution__segment" id="weight_dist_free_tier" data-key="free_tier" role="presentation"></div>
+                            </div>
+                        </div>
+                        <div class="weight-row">
+                            <label for="weight_budget" class="weight-row__label">Budget</label>
+                            <div class="weight-row__slider-wrap">
+                                <input type="range" id="weight_budget" name="weight_budget" class="weight-slider" min="0" max="100" value="25" aria-valuemin="0" aria-valuemax="100">
+                                <span class="weight-row__value" id="weight_budget_value" aria-live="polite">25%</span>
+                            </div>
+                        </div>
+                        <div class="weight-row">
+                            <label for="weight_scalability" class="weight-row__label">Scalability</label>
+                            <div class="weight-row__slider-wrap">
+                                <input type="range" id="weight_scalability" name="weight_scalability" class="weight-slider" min="0" max="100" value="20" aria-valuemin="0" aria-valuemax="100">
+                                <span class="weight-row__value" id="weight_scalability_value" aria-live="polite">20%</span>
+                            </div>
+                        </div>
+                        <div class="weight-row">
+                            <label for="weight_security" class="weight-row__label">Security</label>
+                            <div class="weight-row__slider-wrap">
+                                <input type="range" id="weight_security" name="weight_security" class="weight-slider" min="0" max="100" value="25" aria-valuemin="0" aria-valuemax="100">
+                                <span class="weight-row__value" id="weight_security_value" aria-live="polite">25%</span>
+                            </div>
+                        </div>
+                        <div class="weight-row">
+                            <label for="weight_ease_of_use" class="weight-row__label">Ease of use</label>
+                            <div class="weight-row__slider-wrap">
+                                <input type="range" id="weight_ease_of_use" name="weight_ease_of_use" class="weight-slider" min="0" max="100" value="15" aria-valuemin="0" aria-valuemax="100">
+                                <span class="weight-row__value" id="weight_ease_of_use_value" aria-live="polite">15%</span>
+                            </div>
+                        </div>
+                        <div class="weight-row">
+                            <label for="weight_free_tier" class="weight-row__label">Free tier</label>
+                            <div class="weight-row__slider-wrap">
+                                <input type="range" id="weight_free_tier" name="weight_free_tier" class="weight-slider" min="0" max="100" value="15" aria-valuemin="0" aria-valuemax="100">
+                                <span class="weight-row__value" id="weight_free_tier_value" aria-live="polite">15%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="live-preview" class="live-preview" aria-live="polite">
+                        <h3 class="live-preview__title">Live Recommendation Preview</h3>
+                        <p class="live-preview__label">Preview based on current inputs</p>
+                        <div id="live-preview-loading" class="live-preview__loading" hidden aria-hidden="true"></div>
+                        <div id="live-preview-content" class="live-preview__content" hidden aria-hidden="true"></div>
+                        <div id="live-preview-empty" class="live-preview__empty">Change sliders or dropdowns to see a live preview.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="team_expertise" class="form-group__label">Team Expertise</label>
+                        <select id="team_expertise" name="team_expertise" class="form-group__select" required>
+                            <option value="">Select...</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="industry" class="form-group__label">Industry</label>
+                        <select id="industry" name="industry" class="form-group__select" required>
+                            <option value="">Select...</option>
+                            <option value="general">General</option>
+                            <option value="fintech">Fintech</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="ai">AI</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--submit" id="submit-recommend">Get Recommendation</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 4. Result (provider, model, decision confidence, score bars, explanation, why-not-others injected by ui.js) -->
+        <section id="result-screen" class="screen">
+            <div class="result-wrap">
+                <div id="result-content" class="result-content"></div>
+                <div class="result-actions">
+                    <button type="button" class="btn btn--secondary btn--download" id="cta-download-report" aria-label="Download recommendation report as PDF">
+                        Download Recommendation Report
+                    </button>
+                    <button type="button" class="btn btn--secondary" id="cta-start-over">Start Over</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="lib/jspdf.umd.min.js"></script>
+    <script src="api.js"></script>
+    <script src="ui.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

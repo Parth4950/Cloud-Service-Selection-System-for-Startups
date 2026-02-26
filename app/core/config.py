@@ -1,0 +1,125 @@
+"""
+Configuration and environment settings for the application.
+Centralizes app config; no logic, placeholder for future values.
+Static configuration for provider comparison and service model rules.
+"""
+
+# ---------------------------------------------------------------------------
+# Provider catalog: feature scores (3–10 scale). Each provider is specialized
+# with clear strengths and weaknesses so different inputs yield different winners.
+# ---------------------------------------------------------------------------
+
+PROVIDER_CATALOG = {
+    "aws": {
+        "feature_scores": {
+            "scalability": 10,
+            "security": 9,
+            "ease_of_use": 7,
+            "budget": 6,
+            "free_tier": 5,
+        },
+        "strengths": [
+            "Broadest service catalog and global footprint",
+            "Strong enterprise and compliance offerings",
+            "Leading scalability and security",
+        ],
+    },
+    "azure": {
+        "feature_scores": {
+            "security": 10,
+            "scalability": 8,
+            "ease_of_use": 6,
+            "budget": 5,
+            "free_tier": 4,
+        },
+        "strengths": [
+            "Deep integration with Microsoft stack and hybrid cloud",
+            "Strong compliance and government offerings",
+            "Top-tier security and enterprise focus",
+        ],
+    },
+    "gcp": {
+        "feature_scores": {
+            "free_tier": 10,
+            "budget": 9,
+            "ease_of_use": 9,
+            "scalability": 7,
+            "security": 6,
+        },
+        "strengths": [
+            "Strong data and ML/AI capabilities",
+            "Generous free tier and sustained-use discounts",
+            "Cost-effective and developer-friendly",
+        ],
+    },
+}
+
+# ---------------------------------------------------------------------------
+# Weights for feature dimensions (must sum to 1.0).
+# Easily adjustable for tuning recommendations.
+# ---------------------------------------------------------------------------
+
+WEIGHT_CONFIG = {
+    "budget": 0.25,
+    "scalability": 0.20,
+    "security": 0.25,
+    "ease_of_use": 0.15,
+    "free_tier": 0.15,
+}
+
+# ---------------------------------------------------------------------------
+# Service/model rules: conditions keyed by industry and team_expertise.
+# Structured data only; rule evaluation is done elsewhere.
+# ---------------------------------------------------------------------------
+
+SERVICE_MODEL_RULES = {
+    "industry": {
+        "healthcare": {
+            "preferred_providers": ["aws", "azure"],
+            "required_features": ["security"],
+            "constraints": {"compliance": ["hipaa"]},
+        },
+        "finance": {
+            "preferred_providers": ["aws", "azure"],
+            "required_features": ["security", "scalability"],
+            "constraints": {"compliance": ["pci", "soc2"]},
+        },
+        "startup": {
+            "preferred_providers": ["gcp", "aws"],
+            "required_features": ["free_tier", "budget"],
+            "constraints": {},
+        },
+        "enterprise": {
+            "preferred_providers": ["aws", "azure", "gcp"],
+            "required_features": ["scalability", "security"],
+            "constraints": {},
+        },
+        "default": {
+            "preferred_providers": ["aws", "azure", "gcp"],
+            "required_features": [],
+            "constraints": {},
+        },
+    },
+    "team_expertise": {
+        "high": {
+            "preferred_providers": ["aws", "gcp", "azure"],
+            "weight_overrides": None,
+            "min_ease_of_use": 1,
+        },
+        "medium": {
+            "preferred_providers": ["gcp", "aws", "azure"],
+            "weight_overrides": {"ease_of_use": 0.25},
+            "min_ease_of_use": 5,
+        },
+        "low": {
+            "preferred_providers": ["gcp", "azure", "aws"],
+            "weight_overrides": {"ease_of_use": 0.35},
+            "min_ease_of_use": 7,
+        },
+        "default": {
+            "preferred_providers": ["aws", "azure", "gcp"],
+            "weight_overrides": None,
+            "min_ease_of_use": 1,
+        },
+    },
+}
