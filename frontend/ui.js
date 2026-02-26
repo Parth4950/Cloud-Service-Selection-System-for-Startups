@@ -199,6 +199,32 @@
   }
 
   /**
+   * Build "Estimated Monthly Cost" section: one card per provider with $ cost.
+   * @param {Object} costs - { aws: number, azure: number, gcp: number }
+   * @param {string} selectedProvider - Provider id to highlight
+   */
+  function buildEstimatedCostSection(costs, selectedProvider) {
+    if (!costs || typeof costs !== "object") return "";
+    var selected = (selectedProvider && String(selectedProvider).toLowerCase()) || "";
+    var html = '<p class="result-section-label">Estimated monthly cost</p><div class="result-cost-cards">';
+    for (var i = 0; i < PROVIDERS.length; i++) {
+      var key = PROVIDERS[i];
+      var amount = costs[key];
+      var value = typeof amount === "number" && !isNaN(amount) ? Math.round(amount) : "—";
+      var label = key.charAt(0).toUpperCase() + key.slice(1);
+      var isSelected = key === selected;
+      var cardClass = "result-cost-card" + (isSelected ? " result-cost-card--selected" : "");
+      html += '<div class="' + cardClass + '">' +
+        '<span class="result-cost-card__provider">' + escapeHtml(label) + '</span>' +
+        '<span class="result-cost-card__amount">$' + escapeHtml(String(value)) + '</span>' +
+        '<span class="result-cost-card__period">/mo</span>' +
+        '</div>';
+    }
+    html += "</div>";
+    return html;
+  }
+
+  /**
    * Trigger bar width animation after DOM insertion.
    */
   function animateScoreBars(container) {
@@ -309,6 +335,21 @@
     text("Decision confidence: " + conf.pct + "% — " + getConfidenceText(conf.level), left + 4, y);
     y += lineH + sectionGap;
 
+    var costs = data.estimated_costs || {};
+    if (typeof costs === "object" && (costs.aws != null || costs.azure != null || costs.gcp != null)) {
+      heading("Estimated monthly cost", y);
+      y += lineH + 2;
+      var costKeys = ["aws", "azure", "gcp"];
+      for (var c = 0; c < costKeys.length; c++) {
+        var pk = costKeys[c];
+        var costVal = costs[pk];
+        var costStr = typeof costVal === "number" && !isNaN(costVal) ? "$" + Math.round(costVal) + "/mo" : "—";
+        text(pk.toUpperCase() + ": " + costStr, left + 4, y);
+        y += lineH;
+      }
+      y += sectionGap;
+    }
+
     heading("Score comparison", y);
     y += lineH + 2;
     var scoreKeys = ["aws", "azure", "gcp"];
@@ -390,11 +431,14 @@
 
     var whyNotHtml = buildWhyNotOthers(provider, scores);
     var confidenceHtml = buildConfidenceSection(scores);
+    var costs = data.estimated_costs || {};
+    var costCardsHtml = buildEstimatedCostSection(costs, provider);
 
     container.innerHTML =
       "<h2 class=\"result-provider\">" + escapeHtml(String(provider).toUpperCase()) + "</h2>" +
       "<p class=\"result-model-badge\">" + escapeHtml(model) + "</p>" +
       (confidenceHtml || "") +
+      (costCardsHtml || "") +
       (scoreBarsHtml || "") +
       (explanationItems
         ? "<p class=\"result-section-label\">Explanation</p><ul class=\"result-explanation\">" + explanationItems + "</ul>"

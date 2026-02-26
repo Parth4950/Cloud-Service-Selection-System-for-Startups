@@ -91,6 +91,25 @@ REGION_PROVIDER_MODIFIERS = {
 }
 
 # ---------------------------------------------------------------------------
+# Mock pricing: base monthly compute + storage (USD). Used for cost estimate.
+# ---------------------------------------------------------------------------
+
+MOCK_PRICING = {
+    "aws": {
+        "base_compute": 120,
+        "base_storage": 40,
+    },
+    "azure": {
+        "base_compute": 110,
+        "base_storage": 45,
+    },
+    "gcp": {
+        "base_compute": 100,
+        "base_storage": 35,
+    },
+}
+
+# ---------------------------------------------------------------------------
 # Service/model rules: conditions keyed by industry and team_expertise.
 # Structured data only; rule evaluation is done elsewhere.
 # ---------------------------------------------------------------------------

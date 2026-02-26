@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 
 from flask import Blueprint, request, jsonify
 
-from app.core.scoring_engine import calculate_provider_scores
+from app.core.scoring_engine import calculate_estimated_cost, calculate_provider_scores
 from app.core.service_model_rules import determine_service_model
 from app.core.explanation_engine import generate_explanation
 
@@ -170,6 +170,10 @@ def recommend():
         service_model_result,
     )
 
+    estimated_costs: Dict[str, float] = {}
+    for pid in ("aws", "azure", "gcp"):
+        estimated_costs[pid] = calculate_estimated_cost(user_input, pid)
+
     logger.info(
         "recommend | success | provider=%s | service_model=%s",
         selected_provider,
@@ -182,6 +186,7 @@ def recommend():
             "service_model", "IaaS"
         ),
         "final_scores": provider_scores,
+        "estimated_costs": estimated_costs,
         "explanation": explanation,
     }
 

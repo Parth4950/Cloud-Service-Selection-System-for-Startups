@@ -5,7 +5,12 @@ using static configuration. Pure business logic; no side effects.
 
 from typing import Any, Dict, Mapping, Optional
 
-from app.core.config import PROVIDER_CATALOG, REGION_PROVIDER_MODIFIERS, WEIGHT_CONFIG
+from app.core.config import (
+    MOCK_PRICING,
+    PROVIDER_CATALOG,
+    REGION_PROVIDER_MODIFIERS,
+    WEIGHT_CONFIG,
+)
 
 # Qualitative user input -> numeric intensity (1–9 scale).
 # Used to weight how much each dimension matters to the user.
@@ -77,6 +82,52 @@ def _select_weights(custom_weights: Optional[Mapping[str, Any]]) -> Dict[str, fl
     return normalized
 
 
+def calculate_estimated_cost(
+    user_input: Dict[str, Any],
+    provider: str,
+) -> float:
+    """
+    Compute estimated monthly cost (USD) for a provider from mock pricing and
+    user_input. Deterministic; no external APIs.
+
+    Cost multipliers (additive):
+    - high scalability → +30%
+    - high security → +20%
+    - low team_expertise → +10%
+    (medium: half of high; low/other: 0%)
+
+    Args:
+        user_input: Dict with scalability, security, team_expertise (low/medium/high).
+        provider: Provider id: "aws", "azure", or "gcp".
+
+    Returns:
+        Estimated monthly cost, rounded to integer.
+    """
+    if provider not in MOCK_PRICING:
+        return 0.0
+    bases = MOCK_PRICING[provider]
+    base_total = bases["base_compute"] + bases["base_storage"]
+
+    mult = 1.0
+    raw = user_input or {}
+    scal = (raw.get("scalability") or "medium").lower()
+    sec = (raw.get("security") or "medium").lower()
+    expertise = (raw.get("team_expertise") or "medium").lower()
+
+    if scal == "high":
+        mult += 0.30
+    elif scal == "medium":
+        mult += 0.15
+    if sec == "high":
+        mult += 0.20
+    elif sec == "medium":
+        mult += 0.10
+    if expertise == "low":
+        mult += 0.10
+
+    return round(base_total * mult, 0)
+
+
 def calculate_provider_scores(
     user_input: Dict[str, Any],
     custom_weights: Optional[Mapping[str, Any]] = None,
@@ -131,6 +182,17 @@ def calculate_provider_scores(
         for provider_id in result:
             if provider_id in modifiers:
                 result[provider_id] = round(result[provider_id] + modifiers[provider_id], 4)
+
+    if (user_input or {}).get("budget") == "high":
+        costs = {
+            pid: calculate_estimated_cost(user_input, pid)
+            for pid in result
+        }
+        max_cost = max(costs.values()) if costs else 1.0
+        if max_cost > 0:
+            for provider_id in result:
+                penalty = 0.2 * (costs.get(provider_id, 0) / max_cost)
+                result[provider_id] = round(result[provider_id] - penalty, 4)
 
     return result
 
