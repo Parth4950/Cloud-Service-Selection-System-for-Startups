@@ -169,7 +169,7 @@ def enhance_explanation_with_ai(original_explanation: List[str]) -> str:
         api_key = (GEMINI_API_KEY or "").strip() if isinstance(GEMINI_API_KEY, str) else ""
         if not api_key:
             return formatted
-        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + api_key
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + api_key
         req = urllib.request.Request(
             url,
             data=json.dumps(body).encode("utf-8"),
