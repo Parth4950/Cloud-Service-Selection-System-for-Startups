@@ -155,15 +155,22 @@ def enhance_explanation_with_ai(original_explanation: List[str]) -> str:
     try:
         logger.info("explanation_engine | Calling Gemini for explanation enhancement")
         prompt = (
-            "Rewrite this cloud recommendation explanation professionally and concisely. "
-            "Keep the same meaning and do not add new facts.\n\n"
+            "You are writing the explanation section of a cloud architecture recommendation report.\n"
+            "Using ONLY the information in the explanation text below, rewrite it as ONE polished paragraph of 4–6 full sentences (at least 100 words).\n"
+            "Tone: a blend of technical cloud-architect detail and MBA-style business insight. Imagine you are explaining the decision to a CTO who cares about both architecture and business impact.\n"
+            "Hard requirements:\n"
+            "- Start the FIRST sentence with the name of the recommended cloud provider (for example: 'Google Cloud Platform is recommended because ...' or 'AWS is recommended as ...'). Do NOT start with generic phrases like 'Based on a thorough evaluation'.\n"
+            "- Clearly explain why this provider is the best fit, directly tying your reasoning to the user's priorities (budget, scalability, security, ease of use, free tier, etc.) and to the provider's technical strengths.\n"
+            "- Include one sentence that mentions the recommended service model and why it matches the team's expertise or industry context.\n"
+            "- If the original text references other providers, add one concise sentence explaining why they were not selected.\n"
+            "- Do NOT invent any new facts, numbers, or services that are not present in the original text, and do NOT suggest that the user still needs to choose – the decision has already been made.\n\n"
             + formatted
         )
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 300,
-                "temperature": 0.3,
+                "maxOutputTokens": 400,
+                "temperature": 0.5,
             },
         }
         api_key = (GEMINI_API_KEY or "").strip() if isinstance(GEMINI_API_KEY, str) else ""
@@ -185,8 +192,19 @@ def enhance_explanation_with_ai(original_explanation: List[str]) -> str:
             if parts and isinstance(parts[0], dict):
                 text = parts[0].get("text")
                 if text and isinstance(text, str):
-                    logger.info("explanation_engine | Gemini enhancement succeeded")
-                    return text.strip()
+                    enhanced = text.strip()
+                    # Ensure we end up with a reasonably rich explanation.
+                    # If Gemini returns fewer than ~4 sentences, append the deterministic explanation.
+                    sentence_marks = sum(ch in ".?!" for ch in enhanced)
+                    if sentence_marks < 4 and formatted:
+                        enhanced = enhanced.rstrip()
+                        enhanced = enhanced + "\n\n" + formatted
+                        logger.info(
+                            "explanation_engine | Gemini enhancement short; appended deterministic explanation"
+                        )
+                    else:
+                        logger.info("explanation_engine | Gemini enhancement succeeded")
+                    return enhanced
         logger.warning("explanation_engine | Gemini returned unexpected response structure, using deterministic")
     except urllib.error.HTTPError as e:
         body = ""
