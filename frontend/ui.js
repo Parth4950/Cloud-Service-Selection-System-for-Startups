@@ -22,6 +22,10 @@
     if (target) {
       target.classList.add(ACTIVE_CLASS);
     }
+    var view = screenId.replace("-screen", "");
+    if (document.body) {
+      document.body.setAttribute("data-view", view);
+    }
   }
 
   /**
@@ -97,10 +101,10 @@
    */
   function getConfidenceText(level) {
     return level === "high"
-      ? "High confidence recommendation."
+      ? "We’re fairly sure this is the right direction."
       : (level === "moderate"
-        ? "Moderate confidence."
-        : "Low differentiation between providers.");
+        ? "There’s a real edge here—not a coin flip."
+        : "The top two are close; worth a second look.");
   }
 
   /**
@@ -112,7 +116,7 @@
     var levelClass = " result-confidence--" + conf.level;
     var html =
       '<div class="result-confidence' + levelClass + '">' +
-      '<p class="result-section-label">Decision confidence</p>' +
+      '<p class="result-section-label">How sure we are</p>' +
       '<div class="result-confidence__bar"><div class="result-confidence__fill" data-pct="' + conf.pct + '" style="width:0%"></div></div>' +
       '<p class="result-confidence__meta">' +
       '<span class="result-confidence__value">' + escapeHtml(String(conf.pct) + "%") + '</span> ' +
@@ -149,7 +153,7 @@
       gcp: typeof scores.gcp === "number" ? scores.gcp : 0
     };
     var maxScore = Math.max(vals.aws, vals.azure, vals.gcp, 1);
-    var html = '<p class="result-section-label">Score comparison</p><div class="result-score-bars">';
+    var html = '<p class="result-section-label">How the scores compare</p><div class="result-score-bars">';
     for (var i = 0; i < PROVIDERS.length; i++) {
       var key = PROVIDERS[i];
       var score = vals[key];
@@ -207,7 +211,7 @@
       if (key !== selected) others.push({ key: key, score: vals[key], index: others.length });
     }
     if (others.length === 0) return "";
-    var html = '<div class="result-why-not"><p class="result-section-label">Why other providers were not selected</p><ul class="result-why-not__list">';
+    var html = '<div class="result-why-not"><p class="result-section-label">The other options</p><ul class="result-why-not__list">';
     for (var j = 0; j < others.length; j++) {
       var o = others[j];
       var statement = getWhyNotStatement(o.key, o.score, selectedScore, o.index);
@@ -225,7 +229,7 @@
   function buildEstimatedCostSection(costs, selectedProvider) {
     if (!costs || typeof costs !== "object") return "";
     var selected = (selectedProvider && String(selectedProvider).toLowerCase()) || "";
-    var html = '<p class="result-section-label">Estimated monthly cost</p><div class="result-cost-cards">';
+    var html = '<p class="result-section-label">Rough monthly cost (illustrative)</p><div class="result-cost-cards">';
     for (var i = 0; i < PROVIDERS.length; i++) {
       var key = PROVIDERS[i];
       var amount = costs[key];
@@ -259,7 +263,7 @@
     if (!chain || chain.length === 0) return "";
 
     var providerClass = "architecture-diagram--" + (p || "aws");
-    var html = '<p class="result-section-label">Suggested Cloud Architecture</p>' +
+    var html = '<p class="result-section-label">A stack that could fit</p>' +
       '<div class="result-architecture" data-provider="' + escapeHtml(p) + '">' +
       '<div class="architecture-diagram ' + providerClass + '">';
     for (var i = 0; i < chain.length; i++) {
@@ -479,7 +483,7 @@
 
     var explanationHtml = "";
     if (explanationParagraph) {
-      explanationHtml = "<p class=\"result-section-label\">Explanation</p><p class=\"result-explanation result-explanation--enhanced\">" +
+      explanationHtml = "<p class=\"result-section-label\">Why we recommend this</p><p class=\"result-explanation result-explanation--enhanced\">" +
         escapeHtml(explanationParagraph).replace(/\n/g, "<br>") + "</p>";
     }
 
@@ -490,17 +494,33 @@
     var architectureHtml = renderArchitecture(provider, model);
 
     container.innerHTML =
+      '<div class="result-dashboard">' +
+      '<div class="result-dashboard__hero">' +
+      '<p class="result-intro">Based on your inputs, here\u2019s the best fit for you.</p>' +
       "<h2 class=\"result-provider\">" + escapeHtml(String(provider).toUpperCase()) + "</h2>" +
       "<p class=\"result-model-badge\">" + escapeHtml(model) + "</p>" +
+      "</div>" +
+      '<div class="result-dashboard__sections">' +
       (confidenceHtml || "") +
       (costCardsHtml || "") +
       (architectureHtml || "") +
       (scoreBarsHtml || "") +
       (explanationHtml || "") +
-      (whyNotHtml || "");
+      (whyNotHtml || "") +
+      "</div></div>";
 
     animateConfidence(container);
     animateScoreBars(container);
+
+    var dashEl = container.querySelector(".result-dashboard");
+    if (dashEl) {
+      dashEl.classList.remove("result-dashboard--visible");
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          dashEl.classList.add("result-dashboard--visible");
+        });
+      });
+    }
   }
 
   /**
@@ -619,6 +639,14 @@
         var id = btn.getAttribute("data-preset");
         if (id) applyPreset(id);
       });
+    });
+  }
+
+  var logoHome = document.getElementById("logo-home");
+  if (logoHome) {
+    logoHome.addEventListener("click", function (e) {
+      e.preventDefault();
+      showScreen("landing-screen");
     });
   }
 
